@@ -11,7 +11,7 @@
              :short "o"
              :default "json"
              :help "Output type, hast to be one of json, jdn or raw"}
-   "pretty" {:kind :flag
+   "pretty" {:kind :option
              :short "p"
              :default true
              :help "pretty print output"}
@@ -24,11 +24,18 @@
   (def command (string/join ["(fn [x]" ;(res :default) ")"] " "))
   (def input (json/decode (file/read stdin :all) true))
   (def output ((eval-string command) input))
+  (case (string/ascii-lower (res "pretty"))
+    "true"  (setdyn :pretty true)
+    "yes"   (setdyn :pretty true)
+    "y"     (setdyn :pretty true)
+    "false" (setdyn :pretty false)
+    "no"    (setdyn :pretty false)
+    "n"     (setdyn :pretty false))
   (case (res "output")
-    "json" (if (res "pretty")
+    "json" (if (dyn :pretty)
                (print (json/encode output "  "))
                (print (json/encode output)))
-    "jdn"  (if (res "pretty")
+    "jdn"  (if (dyn :pretty)
                (printf "%P" output)
                (printf "%j" output))
     "raw"  (print output)

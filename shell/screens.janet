@@ -3,7 +3,6 @@
 (defn get-all []
   (->> (sh/exec-slurp "xrandr")
        (string/split "\n")
-       #((fn [x] (pp x) x))
        (filter |(string/find " connected" $0))
        (map |(string/split " " $0))
        (map |($0 0))))
