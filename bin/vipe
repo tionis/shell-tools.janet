@@ -1,0 +1,9 @@
+#!/bin/sh
+vipe_path="$(mktemp)"
+#if test -e "$vipe_path"; then
+#	rm "$vipe_path"
+#fi
+sponge -f "$vipe_path"
+$EDITOR "$vipe_path"
+cat "$vipe_path"
+rm "$vipe_path"
