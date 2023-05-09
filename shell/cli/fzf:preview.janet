@@ -35,7 +35,12 @@
   (if img?
     (os/spawn ["ctpv" "-s" id] :p))
 
-  (os/execute ["fzf" ;pv "--reverse" ;args] :p {:in stdin})
+  (def input
+    (case (os/which)
+      :linux (os/open "/dev/stdin" :r)
+      stdin))
+
+  (os/execute ["fzf" ;pv "--reverse" ;args] :p {:in input})
 
   (if img?
     (os/execute ["ctpv" "-e" id] :p)))
