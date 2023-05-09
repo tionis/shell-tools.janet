@@ -1,0 +1,2 @@
+#!/bin/sh
+:| fzf --preview 'man {q}' --preview-window "top:99%"

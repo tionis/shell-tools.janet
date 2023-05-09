@@ -1,0 +1,2 @@
+#!/bin/sh
+:| fzf --multi --preview='bash -c {q}' --preview-window=up:70

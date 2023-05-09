@@ -1,0 +1,2 @@
+#!/bin/sh
+fzf -m | xargs $EDITOR
