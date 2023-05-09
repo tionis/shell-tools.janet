@@ -1,0 +1,4 @@
+#!/bin/sh
+# find-in-file
+if [ ! "$#" -gt 0 ]; then echo "Need a string to search for!"; return 1; fi
+rga --max-count=1 --ignore-case --files-with-matches --no-messages "$@" | fzf-tmux +m --preview="rga --ignore-case --pretty --context 10 '""$*""' {}"
