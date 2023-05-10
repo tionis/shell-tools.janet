@@ -29,7 +29,7 @@
           (set h (math/floor (- (/ (- LINS 1) 2) 2)))))
       (array/push pv "--preview")
       (array/push pv (string/join (map |(string $0)
-                                       ["ctpv" "-c" id "&&" "ctpv" "{}" w h x y id])
+                                       ["ctpvclear" "&&" "ctpv" "{}" w h x y id])
                                   " "))))
 
   (if img?
@@ -43,4 +43,4 @@
   (os/execute ["fzf" ;pv "--reverse" ;args] :p {:in input})
 
   (if img?
-    (os/execute ["ctpv" "-e" id] :p)))
+    (os/execute ["ctpvquit" id] :p)))
