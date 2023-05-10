@@ -28,7 +28,7 @@
              :package-manager :apt
              :install (fn [& pkgs] (os/execute ["sudo" "apt" "install" ;pkgs] :p))
              :uninstall (fn [& pkgs] (os/execute ["sudo" "apt" "remove" ;pkgs] :p))]
-   "ubuntu" [:distribution :debian
+   "ubuntu" [:distribution :ubuntu
              :package-manager :apt
              :install (fn [& pkgs] (os/execute ["sudo" "apt" "install" ;pkgs] :p))
              :uninstall (fn [& pkgs] (os/execute ["sudo" "apt" "remove" ;pkgs] :p))]})
