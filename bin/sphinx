@@ -1,15 +1,25 @@
 #!/bin/env bash
 main="${1:-./main.bin}"
+debug=0
+if test "$main" = "debug"; then
+  debug=1
+  main="${2:-./main.bin}"
+fi
 echo "Starting tests..."
 
 for file in *.in; do
   if test "$file" = "*.in"; then break; fi
   test="$(echo "$file" | grep -oP '.*(?=.in)')"
   printf "Test \033[0;34m%s\033[0m\n" "$test"
-  if test -e "$test.out"; then
-    diff --color -C 100 <(cat "$file" | "$main") "$test.out" && printf "\033[0;32mSuccess\033[0m\n"
+  if test "$debug" -eq 1; then
+    echo "Not implemented yet" >&2
+    exit 1
   else
-    cat "$file" | "$main"
+    if test -e "$test.out"; then
+      diff --color -C 100 <(cat "$file" | "$main") "$test.out" && printf "\033[0;32mSuccess\033[0m\n"
+    else
+      cat "$file" | "$main"
+    fi
   fi
 done
 
