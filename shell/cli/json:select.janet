@@ -1,5 +1,5 @@
 #!/bin/env janet
-(import json)
+(import spork/json)
 (import spork/argparse :prefix "")
 
 (def argparse-params
