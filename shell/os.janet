@@ -22,7 +22,7 @@
      :install (fn [& pkgs] (os/execute ["sudo" "pacman" "-S" ;pkgs] :p))
      :uninstall (fn [& pkgs] (os/execute ["sudo" "pacman" "-Rns" ;pkgs] :p))]))
 
-(def distro-id-map
+(def- distro-id-map
   {"arch" [:distribution :arch]
    "debian" [:distribution :debian
              :package-manager :apt
@@ -57,7 +57,7 @@
     # TODO try reading /etc/debian_version
     [:distribution :unknown :version :unknown]))
 
-(defn detect-macos-version []
+(defn- detect-macos-version []
   [:version :unknown
    :package-manager :unknown])
 

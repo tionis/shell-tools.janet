@@ -32,4 +32,3 @@
 
 (declare-source # Declare source files to be imported by other janet based scripts
   :source ["shell"])
-
