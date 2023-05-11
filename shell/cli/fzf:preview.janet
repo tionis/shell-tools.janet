@@ -33,7 +33,7 @@
                                   " "))))
 
   (if img?
-    (os/spawn ["ctpv" "-s" id] :p))
+    (os/spawn ["ctpv" "-s" id] :p {:in (sh/devnull)}))
 
   (def input
     (case (os/which)
