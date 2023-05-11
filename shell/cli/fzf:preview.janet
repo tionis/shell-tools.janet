@@ -1,10 +1,13 @@
 #!/bin/env janet
-(import spork/base64)
 (import spork/rawterm)
 (import spork/sh)
 
+(defn roll-one-y-sided-die [y]
+  (if (not (dyn :rng)) (setdyn :rng (math/rng (os/cryptorand 8))))
+  (+ 1 (math/rng-int (dyn :rng) y)))
+
 (defn main [_ & args]
-  (def id (string/replace "/" "-" (base64/encode (os/cryptorand 12))))
+  (def id (string (roll-one-y-sided-die 1000000000)))
   (def pv @[])
   (var [h w] (rawterm/size))
   (var [x y] [0 0])
@@ -35,12 +38,7 @@
   (if img?
     (os/spawn ["ctpv" "-s" id] :p {:in (sh/devnull)}))
 
-  (def input
-    (case (os/which)
-      :linux (os/open "/dev/stdin" :r)
-      stdin))
-
-  (os/execute ["fzf" ;pv "--reverse" ;args] :p {:in input})
+  (os/execute ["fzf" ;pv "--reverse" ;args] :p)
 
   (if img?
     (os/execute ["ctpvquit" id] :p)))

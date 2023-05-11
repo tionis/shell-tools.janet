@@ -1,0 +1,9 @@
+#!/bin/sh
+# simple ssh auto reconnect script
+while true; do
+	ssh -q "$@"
+	if test "$?" -ne 255; then
+		break
+	fi
+	sleep 1
+done
