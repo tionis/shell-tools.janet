@@ -1,0 +1,235 @@
+#!/bin/sh
+# Based on https://github.com/ericpaulbishop/cp_p
+# and https://unix.stackexchange.com/questions/44040/a-standard-tool-to-convert-a-byte-count-into-human-kib-mib-etc-like-du-ls1
+
+H_FUN='
+function human(x) {
+    if (x < 0) {
+       return "..."
+    }
+    s=" B   KiB MiB GiB TiB EiB PiB YiB ZiB"
+    while (x >= 1024 && length(s) > 1) {
+        x /= 1024
+        s = substr(s, 5)
+    }
+    s = substr(s, 1, 4)
+    xf = (s == " B  ") ? "%d" : "%.2f"
+    return sprintf(xf"%s", x, s)
+}
+function human_time(t) {
+    if (t < 0) {
+       return "..."
+    }
+    h = int(t / 3600)
+    m = int(t / 60) % 60
+    s = t % 60
+    if (h == 0) {h = ""} else {h = sprintf("%dh ", h)}
+    if (m == 0) {m = ""} else {m = sprintf("%dm ", m)}
+    return sprintf("%s%s%.1fs", h, m, s)
+}'
+
+help() {
+    orig=$(echo "$cmd" | head -n1)
+    echo "Usage: ${orig}-p [OPTION]... SOURCE DEST"
+    echo "Like ${orig} but with progress information."
+    echo
+    echo "  -F FILE    read source paths from FILE"
+    echo "  --new-line show every progress step in a new line"
+    echo "  --lf-paste to be used for lf file manager."
+    echo "             Add 'cmd paste \$cp-p --lf-paste \$id' to"
+    echo "             ~/.config/lf/lfrc"
+    echo "  --help     display this help and exit"
+    echo
+    echo "Check ${orig} --help for more options."
+
+    exit 1
+}
+
+main() {
+    if [ "$1" = '--lf-paste' ]; then
+        shift
+        lf_paste "$@"
+        return
+    fi
+
+    if [ "$1" = --mv ]; then
+        cmd='mv'
+        shift
+    else
+        cmd='cp
+-r'
+    fi
+
+    if [ "$1" = --help ]; then
+        help
+    fi
+
+    if [ "$1" = --new-line ]; then
+        R='\n'
+        B=''
+        W=99999999
+        shift
+    else
+        R=''
+        B='\033[0E\033[K'
+        W=$(tput cols)
+    fi
+
+    # ARGS STUFF
+
+    srcs=''
+    srcF=''
+    dest=''
+    opts=''
+
+    i=1
+    while [ $i -le $# ]; do
+        arg=$(eval echo '$'$i)
+        if [ $i = $# ] && [ ! "$dest" ]; then
+            dest="$arg"
+            break
+        fi
+        if [ -e "$arg" ]; then
+            srcs="$srcs$arg
+"
+        elif [ "$arg" = '-t' ]; then
+            i=$((i + 1))
+            dest=$(eval echo '$'$i)
+        elif [ "$arg" = '-F' ]; then
+            ##### -F: file including sources files #####
+            i=$((i + 1))
+            srcF=$(eval echo '$'$i)
+        else
+            opts="$opts$arg
+"
+        fi
+        i=$((i + 1))
+    done
+
+    if [ "$srcF" ]; then
+        while read -r line; do
+            if [ -e "$line" ]; then
+                srcs="$srcs$line
+"
+            fi
+        done < "$srcF"
+    fi
+
+    # remove last empty line
+    srcs=$(echo "$srcs" | head -c -1)
+
+    if [ ! "$srcs" ] || [ ! "$dest" ]; then
+        help
+    fi
+
+    # THE ACTUAL THING
+
+    printf $B'Calculating size...'$R
+
+    exists=0
+    total_size=0
+    IFS='
+'; for src in $srcs; do
+       exists=1
+       arg_size=$(du -sb "$src" 2>/dev/null | awk '{print $1}')
+       if [ -n "$arg_size" ]; then
+           total_size=$((total_size + arg_size))
+       fi
+   done
+
+    if [ "$exists" = "0" ]; then
+        echo "ERROR: No source file specified exists. Please try again"
+        exit 1
+    fi
+
+    total_size_h=$(echo $total_size | awk "$H_FUN"'{print human($1)}')
+
+
+    if [ "$cmd" = mv ]; then
+        printf $B'Moving...'$R
+    else
+        printf $B'Copying...'$R
+    fi
+
+    count=0
+    IFS='
+'; for src in $srcs; do
+
+       # if same name
+       fname=$(basename "$src")
+       finaldest=$(realpath "$dest")
+       if [ -e "$dest/$fname" ]; then
+           copy_n=
+           # keep looping till a new name is found
+           while :; do
+               finaldest="$dest/$fname"
+               finaldest=$(echo "$finaldest" |
+                               sed -En "s/(.+)\.(.+)/\1-copy$copy_n.\2/p")
+               [ "$finaldest" ] || finaldest="$dest/$fname-copy$copy_n"
+               if [ ! -e "$finaldest" ]; then
+                   break
+               elif [ ! "$copy_n" ]; then
+                   copy_n=1
+               else
+                   copy_n=$((copy_n + 1))
+               fi
+           done
+       fi
+
+       strace -q -e write,copy_file_range,sendfile \
+              $cmd $opts "$src" "$finaldest" 2>&1 |
+           awk "$H_FUN"'
+        BEGIN { time_start = systime() }
+        {
+            time_elapsed = systime() - time_start
+            count += $NF
+            if (time_elapsed == 0 || count == 0) {
+                bytes_per_sec = -1
+                eta = -1
+            } else {
+                bytes_per_sec = count / time_elapsed
+                eta = (total_size - count) / bytes_per_sec
+            }
+            if (total_size > 0 && count % 10 == 0) {
+                percent = (count / total_size) * 100
+                printf "'$B'"substr(sprintf("%3d%% (%s/%s, %s/s, ETA: %s) %s to %s'$R'", percent, human(count), total_size_h, human(bytes_per_sec), human_time(eta), src, finaldest), 0, '$W')
+            }
+        }
+        END { print "'$B'Took " human_time(systime() - time_start) }' \
+               total_size=$total_size \
+               total_size_h="$total_size_h" \
+               count=$count \
+               src="$src" finaldest="$finaldest"
+
+       arg_size=$(du -sb "$src" 2>/dev/null | awk '{ print $1 }')
+       count=$((count + arg_size))
+   done
+
+    if [ "$cmd" = mv ]; then
+        echo 'Done moving'
+    else
+        echo 'Done copying'
+    fi
+
+}
+
+# to be used only for `lf` file manager. cp-p and mv-p must be on $PATH
+lf_paste() {
+    id="$1"
+    send="while read -r line; do lf -remote \"send $id echo \$line\"; done && lf -remote 'send reload'"
+    load=$(cat ~/.local/share/lf/files)
+    mode=$(echo "$load" | sed -n '1p')
+    srcF=$(mktemp)
+    echo "$load" | sed '1d' > "$srcF"
+    s='' && [ ! -w . ] && s='sudo'
+    case "$mode" in
+        copy) cmd='cp-p';; move) cmd='mv-p';;
+    esac
+    cmd="$cmd --new-line"
+    [ "$mode" = copy ] && cmd="$cmd -a"
+    sh -c "$s $cmd --backup=numbered -F \"$srcF\" . | $send && rm -f \"$srcF\" &"
+    rm ~/.local/share/lf/files
+    lf -remote 'send clear'
+}
+
+main "$@"
