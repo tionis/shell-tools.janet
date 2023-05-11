@@ -2,6 +2,9 @@
 ## External Dependecies (besides janet/jpm)
 - [ctpv](https://github.com/NikitaIvanovV/ctpv)(only for some fzf previews)
 - [vis](https://github.com/martanne/vis)(for some clipboard integrations)
+- [fzf](https://github.com/junegunn/fzf) (for multiple shell script and optional support in jeff)
+- GNU core utils (for shell scripts)
+- bc (for ffm)
 
 ## Project Structure
 ### bin
