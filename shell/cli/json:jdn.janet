@@ -3,7 +3,7 @@
 (import spork/argparse)
 
 (def argparse-params
-  [`Convert jdn to json
+  [`Convert json to jdn
    Takes input either via commandline args or stdin` 
    "pretty" {:kind :flag
              :short "p"
