@@ -1136,7 +1136,7 @@ doit() {
                     if [ "$OPENER" ]; then
                         "$OPENER" "$res"
                     elif exists open; then
-                        open "$res"
+                        open -b "$res"
                     elif exists xdg-open; then
                         xdg-open "$res"
                     else
