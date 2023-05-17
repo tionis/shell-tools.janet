@@ -1257,6 +1257,7 @@ conf_init() {
     bind ctrl-c     fun  copy
     bind ctrl-x     fun  move
     bind ctrl-v     funq paste
+    bind ctrl-o     funq open_with
     bind f2         fun  rename
     bind del        fun  delete
     bind ctrl-f     funq search
