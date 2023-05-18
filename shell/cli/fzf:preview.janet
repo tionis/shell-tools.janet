@@ -7,6 +7,16 @@
   (+ 1 (math/rng-int (dyn :rng) y)))
 
 (defn main [_ & args]
+  # (when (= (first args) "preview")
+  #   (var file (get args 1 ""))
+  #   (def w (get args 2 ""))
+  #   (def h (get args 3 ""))
+  #   (def x (get args 4 ""))
+  #   (def y (get args 5 ""))
+  #   (def id (get args 6 ""))
+  #   (sh/exec "ctpv" "-c" id)
+  #   (sh/exec "ctpv" file w h x y id)
+  #   (os/exit 0))
   (def id (string (roll-one-y-sided-die 1000000000)))
   (def pv @[])
   (var [h w] (rawterm/size))
@@ -33,6 +43,7 @@
       (array/push pv "--preview")
       (array/push pv (string/join (map |(string $0)
                                        ["ctpv" "-c" id "&&" "ctpv" "{}" w h x y id])
+                                       #["fzf:preview" "preview" "{}" w h x y id])
                                   " "))))
 
   (if img?
