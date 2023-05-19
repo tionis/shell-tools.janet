@@ -1,0 +1,18 @@
+#!/bin/sh
+if ! command -v make >/dev/null; then
+	exit 1
+fi
+if ! command -v git >/dev/null; then
+	exit 1
+fi
+
+if ! test -d "$HOME/.cache/vis.repo"; then
+	git clone https://github.com/martanne/vis "$HOME/.cache/vis.repo"
+else
+	git -C "$HOME/.cache/vis.repo" pull
+fi
+
+export PREFIX="$HOME/.local"
+cd "$HOME/.cache/vis.repo" || exit 1
+./configure "--prefix=$PREFIX"
+make -j install
