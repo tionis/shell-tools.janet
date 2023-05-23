@@ -24,7 +24,7 @@
   (declare-binscript # Install simple janet scripts
     :main (string "binscript/" f)
     :hardcode-syspath false
-    :is-janet false))
+    :is-janet true))
 
 (each f (if (os/stat "man") (os/dir "man") [])
   (declare-manpage # Install man pages
