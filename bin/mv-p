@@ -1,3 +1,2 @@
 #!/bin/sh
-exec mv "$@"
-#exec cp-p --mv "$@"
+exec cp-p --mv "$@"

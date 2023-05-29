@@ -726,7 +726,8 @@ paste() {
             copy)
                 cp-p --backup=numbered -a -F "$srcf" . ;;
             move)
-                mv-p --backup=numbered -F "$srcf" . ;;
+                mv "$srcf" . ;;
+                #mv-p --backup=numbered -F "$srcf" . ;;
         esac
         rm -f "$srcf"
     else
