@@ -718,7 +718,8 @@ paste() {
     mode=$(echo "$load" | sed -n '1p')
     list=$(echo "$load" | sed '1d')
 
-    if exists cp-p; then
+    #if exists cp-p; then
+    if false; then
         srcf=$(mktemp)
         echo "$list" > "$srcf"
         reset_terminal
@@ -726,8 +727,7 @@ paste() {
             copy)
                 cp-p --backup=numbered -a -F "$srcf" . ;;
             move)
-                mv "$srcf" . ;;
-                #mv-p --backup=numbered -F "$srcf" . ;;
+                mv-p --backup=numbered -F "$srcf" . ;;
         esac
         rm -f "$srcf"
     else
