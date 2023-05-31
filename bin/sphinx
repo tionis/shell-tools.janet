@@ -16,7 +16,7 @@ for file in *.in; do
     exit 1
   else
     if test -e "$test.out"; then
-      diff --color -C 100 <(cat "$file" | "$main") "$test.out" && printf "\033[0;32mSuccess\033[0m\n"
+      diff --text --color -C 100 <(cat "$file" | "$main") "$test.out" && printf "\033[0;32mSuccess\033[0m\n"
     else
       cat "$file" | "$main"
     fi
