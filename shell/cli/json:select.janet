@@ -13,7 +13,7 @@
              :help "Output type, hast to be one of json, jdn or raw"}
    "pretty" {:kind :option
              :short "p"
-             :default true
+             :default "y"
              :help "pretty print output"}
    :default {:kind :accumulate}])
 
@@ -36,7 +36,7 @@
                (print (json/encode output "  "))
                (print (json/encode output)))
     "jdn"  (if (dyn :pretty)
-               (printf "%P" output)
+               (printf "%M" output)
                (printf "%j" output))
     "raw"  (print output)
     (error "Unknown output type")))
