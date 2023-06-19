@@ -135,7 +135,7 @@
          (or name-override name)
          {:doc help
           :func-name func-name
-          :options options
+          :options (if options (merge {:default {:kind :accumulate}} options))
           :func func}))
   (def subcommand (get args 1 nil))
   (def subcommand/args (if (> (length args) 2)
@@ -149,5 +149,5 @@
                                     :args [(args 0) ;subcommand/args]
                                     ;(mapcat identity (pairs (command :options))))]
                        (unless parsed (os/exit 0))
-                       [parsed ;subcommand/args])
+                       [parsed ;(parsed :default)])
                      subcommand/args)))
