@@ -5,7 +5,7 @@ if test "$main" = "debug"; then
   debug=1
   main="${2:-./main.bin}"
 fi
-echo "Starting tests..."
+echo "Starting tests at $(date '+%H:%M:%S')"
 
 for file in *.in; do
   if test "$file" = "*.in"; then break; fi
