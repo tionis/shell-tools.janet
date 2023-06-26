@@ -152,5 +152,5 @@
                                     :args [(args 0) ;subcommand/args]
                                     ;(mapcat identity (pairs (command :options))))]
                        (unless parsed (os/exit 0))
-                       [parsed ;(parsed :default)])
+                       [parsed ;(get parsed :default [])])
                      subcommand/args)))
