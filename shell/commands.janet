@@ -22,7 +22,7 @@
     str
     (string str (string/repeat " " (- n len)))))
 
-(defn- doc-string-to-cli-help [command indentation has-argparse func-name docstring]
+(defn- doc-string-to-cli-help [command indentation has-argparse func-name docstring alias]
   (def lines (string/split "\n" (string/trimr docstring)))
   (def out @"")
   (buffer/push out
@@ -41,9 +41,16 @@
     (do
       (each line (slice lines 2 -2)
         (buffer/push out (string/repeat " " (+ indentation 2)) line "\n"))
-      (buffer/push out (string/repeat " " (+ indentation 2)) (last lines))
-      out)
-    (buffer/popn out 1)))
+      (buffer/push out (string/repeat " " (+ indentation 2)) (last lines)))
+    (buffer/popn out 1))
+  (when (> (length alias) 0)
+    (buffer/push out
+                 "\n"
+                 (string/repeat " " (+ indentation 2))
+                 "aliases: ["
+                 (string/join alias ", ")
+                 "]"))
+  out)
 
 (defn- argparse-params-to-cli-help [indentation options]
   (def out @"")
@@ -85,21 +92,23 @@
   (def indentation 2)
   (buffer/push out desc "\nAvailable commands:\n")
   (eachk command commands
-    (def options (get-in commands [command :options]))
-    (buffer/push out
-                 (doc-string-to-cli-help
-                   command
-                   indentation
-                   (truthy? options)
-                   (get-in commands [command :func-name])
-                   (get-in commands [command :doc])))
-    (if options
+    (when (not (get-in commands [command :is-alias]))
+      (def options (get-in commands [command :options]))
       (buffer/push out
-                   "\n"
-                   (argparse-params-to-cli-help
-                     (+ indentation 2)
-                     options))
-      (buffer/push out "\n")))
+                   (doc-string-to-cli-help
+                     command
+                     indentation
+                     (truthy? options)
+                     (get-in commands [command :func-name])
+                     (get-in commands [command :doc])
+                     (get-in commands [command :alias])))
+      (if options
+        (buffer/push out
+                     "\n"
+                     (argparse-params-to-cli-help
+                       (+ indentation 2)
+                       options))
+        (buffer/push out "\n"))))
   out)
 
 (defn commands
@@ -112,6 +121,8 @@
   if metadata :options is defined it uses it as input map
   for spork/argparse/argparse and passes the parsed args
   table a first argument to function
+  if metadata :alias is given the function is also aliased
+  under the given names
   Spcifying a description via the :desc named argument
   is recommended`
   [&named env args desc func-grammar]
@@ -130,6 +141,7 @@
                                    func-name)))
                name-override (get meta :name)
                options (get meta :options)
+               aliases (get meta :alias [])
                func (get meta :value)
                help (get meta :doc)]
          :when name
@@ -139,7 +151,14 @@
          {:doc help
           :func-name func-name
           :options (if options (merge {:default {:kind :accumulate}} options))
-          :func func}))
+          :func func
+          :alias aliases})
+    (each alias aliases
+      (put commands alias {:doc help
+                           :func-name func-name
+                           :options (if options (merge {:default {:kind :accumulate}} options))
+                           :func func
+                           :is-alias true})))
   (def subcommand (get args 1 nil))
   (def subcommand/args (if (> (length args) 2)
                          (slice args 2 -1)
