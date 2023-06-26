@@ -23,7 +23,7 @@
     (string str (string/repeat " " (- n len)))))
 
 (defn- doc-string-to-cli-help [command indentation has-argparse func-name docstring]
-  (def lines (string/split "\n" docstring))
+  (def lines (string/split "\n" (string/trimr docstring)))
   (def out @"")
   (buffer/push out
     (string/repeat " " indentation)
@@ -37,10 +37,13 @@
       (string/join
         (map |(string/format "%j" $0) (slice (parse (first lines)) 1 -1))
              " ") "\n"))
-  (each line (slice lines 2 -2)
-    (buffer/push out (string/repeat " " (+ indentation 2)) line "\n"))
-  (buffer/push out (string/repeat " " (+ indentation 2)) (last lines))
-  out)
+  (if (> (length lines) 2)
+    (do
+      (each line (slice lines 2 -2)
+        (buffer/push out (string/repeat " " (+ indentation 2)) line "\n"))
+      (buffer/push out (string/repeat " " (+ indentation 2)) (last lines))
+      out)
+    (buffer/popn out 1)))
 
 (defn- argparse-params-to-cli-help [indentation options]
   (def out @"")
