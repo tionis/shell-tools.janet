@@ -64,7 +64,7 @@
       (def kind (handler :kind))
       (def usage-prefix
         (string
-          ;(if short [" -" short ", "] [(string/repeat " " (+ indentation 2))])
+          ;(if short [(string/repeat " " (+ indentation 2)) "-" short ", "] [(string/repeat " " (+ indentation 2))])
           "--" name
           ;(if (or (= :option kind) (= :accumulate kind))
              [" " (or (handler :value-name) "VALUE")
