@@ -6,8 +6,15 @@
 (import ./ts :export true)
 (import ./os :export true)
 
-(defn pp [x]
+(defn pp
+  "pretty print with colors is os/isatty truthy"
+  [x]
   (printf (if (os/isatty) "%M" "%j") x))
+
+(defn ppe
+  "pretty print to stderr with colors is os/isatty truthy"
+  [x]
+  (eprintf (if (os/isatty) "%M" "%j") x))
 
 (defn simple
   `simple help message handler to be put at beginning of cli script execution
