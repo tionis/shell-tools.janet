@@ -32,3 +32,25 @@
 
 (declare-source # Declare source files to be imported by other janet based scripts
   :source ["shell"])
+
+(declare-native
+  :name "shell/ctrl-c/native"
+  :source ["src/ctrl.c"])
+
+(when (index-of (os/which) [:posix :linux :macos])
+  # if creating executable use add :deps [(posix-spawn :static)] etc
+  # to declare-executable to handle compile steps correctly
+  (def posix-spawn
+    (declare-native
+      :name "shell/posix_spawn/native"
+      :source ["src/posix-spawn.c"]))
+  (declare-source
+    :prefix "shell"
+    :source ["src/posix-spawn.janet"])
+  (def sh
+    (declare-native
+      :name "shell/sh/native"
+      :source ["src/sh.c"]))
+  (declare-source
+    :prefix "shell"
+    :source ["src/sh.janet"]))
