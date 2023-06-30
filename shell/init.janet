@@ -1,4 +1,5 @@
-(import ./commands :prefix "" :export true)
+(import ./util :prefix "" :export true)
+(import ./commands :export true)
 (import ./which :prefix "" :export true)
 (import ./screens :export true)
 (import ./dot-env :export true)
@@ -25,3 +26,5 @@
       :help (print desc)
       :specify-args (print "specify args!\n" desc))
     (os/exit 0)))
+
+(alias 'commands 'commands/commands)

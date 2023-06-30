@@ -182,3 +182,9 @@
                        (unless parsed (os/exit 0))
                        [parsed ;(get parsed :default [])])
                      subcommand/args)))
+
+(defn main
+  (string "main func to be used with `(use shell/commands)`\n"
+          "script description is set from (dyn :description)")
+  [_ & args]
+  (commands :desc (dyn :description)))
