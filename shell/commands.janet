@@ -1,5 +1,40 @@
 (import spork/argparse)
 
+(defn get-function-metadata [func]
+  (def meta (disasm func))
+  (prinf "%M" meta)
+  (def ret @{})
+  (put ret :arg-arr (map |($0 3) (meta :symbolmap)))
+  (cond
+    (meta :structarg)
+    (do
+      (def arr (map hash (ret :arg-arr))) # Not an ideal solution but the index-of check below cannot find two symbols that were created seperatly, so this will have to do
+      (def index (min-of (map |(index-of (hash $0) arr) (meta :constants))))
+      (put-in ret :kind :keys)
+      (each arg (slice (ret :arg-arr) 0 index)
+        (put-in ret [:args arg :kind] :static))
+      (each arg (slice (ret :arg-arr) index -1)
+        (put-in ret [:args arg :kind] :key)))
+    (meta :vararg)
+    (do
+      (put-in ret :kind :var)
+      (each arg (slice (ret :arg-arr) 0 -2)
+        (put-in ret [:args arg :kind] :static))
+      (put-in ret [:args (last (ret :arg-arr)) :kind] :sink))
+    (not= (meta :min-arity) (meta :max-arity))
+    (do
+      (put-in ret :kind :opt)
+      (def index (meta :min-arity))
+      (each arg (slice (ret :arg-arr) 0 index)
+        (put-in ret [:args arg :kind] :static))
+      (each arg (slice (ret :arg-arr) index -1)
+        (put-in ret [:args arg :kind] :opt)))
+    (do
+      (put-in ret :kind :static)
+      (each arg (ret :arg-arr)
+        (put-in ret [:arg arg :kind] :static))))
+  ret)
+
 (def- colors
   {:black   "\e[0;30m"
    :red     "\e[0;31m"
