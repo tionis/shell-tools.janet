@@ -115,6 +115,12 @@
         (buffer/push out "\n"))))
   out)
 
+# TODO missing features:
+# handle functions with named arguments by auto-generating argparse
+# allow adding type information to functions via argument metadata
+# use the same metadata to also define descriptions and maybe other
+# data about the arguments (this approach might also be used for 
+# multimethods in janet-tools)
 (defn commands
   `simple cli wrapper for subcommand based scripts
   allows defining funcs following the pattern of cli/name
@@ -182,6 +188,25 @@
                        (unless parsed (os/exit 0))
                        [parsed ;(get parsed :default [])])
                      subcommand/args)))
+
+
+(defn simple
+  `simple help message handler to be put at beginning of cli script execution
+  with a description set to unify help messages
+  if require-args is set, help message also triggers when no args were given
+  if no args are give they are taken from (dyn *args*)`
+  [&named desc args require-args]
+  (default args (dyn *args*))
+  (default desc "no description available")
+  (def command
+    (get @{"help" :help
+           "--help" :help
+           "-h" :help} (get args 1 (if require-args :specify-args nil)) nil))
+  (when command
+    (case command
+      :help (print desc)
+      :specify-args (print "specify args!\n" desc))
+    (os/exit 0)))
 
 (defn main
   `main func to be used with (use shell/commands)
