@@ -94,14 +94,18 @@
   (eachk command commands
     (when (not (get-in commands [command :is-alias]))
       (def options (get-in commands [command :options]))
-      (buffer/push out
-                   (doc-string-to-cli-help
-                     command
-                     indentation
-                     (truthy? options)
-                     (get-in commands [command :func-name])
-                     (get-in commands [command :doc])
-                     (get-in commands [command :alias])))
+      (if-let [help (get-in commands [command :help])]
+        (buffer/push out (string/repeat " " indentation)
+                     (color :cyan command)
+                     " " help)
+        (buffer/push out
+                     (doc-string-to-cli-help
+                       command
+                       indentation
+                       (truthy? options)
+                       (get-in commands [command :func-name])
+                       (get-in commands [command :doc])
+                       (get-in commands [command :alias]))))
       (if options
         (buffer/push out
                      "\n"
@@ -152,7 +156,7 @@
           :func-name func-name
           :options (if options (merge {:default {:kind :accumulate}} options))
           :func func
-          :alias aliases})
+          :alias (filter |(string? $0) aliases)}) # filter out special aliases
     (each alias aliases
       (put commands alias {:doc help
                            :func-name func-name
@@ -163,8 +167,13 @@
   (def subcommand/args (if (> (length args) 2)
                          (slice args 2 -1)
                          []))
-  (def command (get commands subcommand
-                    {:func (fn [& _] (prin (generate-help desc commands)))}))
+  (put commands "help" {:help `show this help`
+                        :func (fn [& _] (prin (generate-help desc commands)))})
+  (def default-command
+    (if-let [c (commands :default)]
+      c
+      (commands "help")))
+  (def command (get commands subcommand default-command))
   ((command :func) ;(if (command :options)
                      (let [parsed (argparse/argparse
                                     desc
