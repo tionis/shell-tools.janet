@@ -5,6 +5,7 @@
 (import ./dot-env :export true)
 (import ./ts :export true)
 (import ./os :export true)
+(import ./path :export true)
 
 (defn pp
   "pretty print with colors is os/isatty truthy"
