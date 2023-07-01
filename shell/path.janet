@@ -45,7 +45,7 @@
   `returns home directory of user, if input path parts are given
   they are merge with spork/path/join to get a combined path`
   [& parts]
-  (path/join path/get-home ;parts))
+  (path/join (path/get-home) ;parts))
 
 (defn path/mydir
   `returns directory of currently executing script, if input path parts are given
@@ -57,4 +57,4 @@
   `returns path of currently executing script, if input path parts are given
   they are merge with spork/path/join to get a combined path`
   [& parts]
-  (path/join path/get-myself ;parts))
+  (path/join (path/get-myself) ;parts))
