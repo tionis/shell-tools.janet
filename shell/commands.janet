@@ -189,8 +189,7 @@
                aliases (get meta :alias [])
                func (get meta :value)
                help (get meta :doc)]
-         :when name
-         ]
+         :when name]
     (put commands
          (or name-override name)
          {:doc help
@@ -247,4 +246,5 @@
   `main func to be used with (use shell/commands)
   script description is set from (dyn :description)`
   [_ & args]
-  (commands :desc (dyn :description)))
+  (commands :desc (dyn :description)
+            :args args))

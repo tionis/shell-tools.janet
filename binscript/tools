@@ -1,0 +1,15 @@
+#!/bin/env janet
+(use shell/commands)
+(import spork/misc)
+(import shell/entr)
+(import shell)
+(setdyn :description "shell tools")
+
+(defn cli/entr/this
+  "simply watch working dir and execute args on change"
+  [& args]
+  (entr/inotify
+    ["."]
+    (fn []
+        (def code (os/execute args :p))
+        (shell/pp [:exit-code code]))))

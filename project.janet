@@ -23,7 +23,7 @@
 (each f (if (os/stat "binscript") (os/dir "binscript") [])
   (declare-binscript # Install simple janet scripts
     :main (string "binscript/" f)
-    :hardcode-syspath false
+    :hardcode-syspath true
     :is-janet true))
 
 (each f (if (os/stat "man") (os/dir "man") [])
