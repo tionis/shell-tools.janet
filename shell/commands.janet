@@ -245,6 +245,6 @@
 (defn main
   `main func to be used with (use shell/commands)
   script description is set from (dyn :description)`
-  [_ & args]
+  [& args]
   (commands :desc (dyn :description)
             :args args))
