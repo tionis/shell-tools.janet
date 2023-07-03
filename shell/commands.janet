@@ -2,36 +2,35 @@
 
 (defn get-function-metadata [func]
   (def meta (disasm func))
-  (prinf "%M" meta)
   (def ret @{})
-  (put ret :arg-arr (map |($0 3) (meta :symbolmap)))
+  (put ret :order (map |($0 3) (meta :symbolmap)))
   (cond
     (meta :structarg)
     (do
-      (def arr (map hash (ret :arg-arr))) # Not an ideal solution but the index-of check below cannot find two symbols that were created seperatly, so this will have to do
+      (def arr (map hash (ret :order))) # Not an ideal solution but the index-of check below cannot find two symbols that were created seperatly, so this will have to do
       (def index (min-of (map |(index-of (hash $0) arr) (meta :constants))))
-      (put-in ret :kind :keys)
-      (each arg (slice (ret :arg-arr) 0 index)
+      (put ret :kind :keys)
+      (each arg (slice (ret :order) 0 index)
         (put-in ret [:args arg :kind] :static))
-      (each arg (slice (ret :arg-arr) index -1)
+      (each arg (slice (ret :order) index -1)
         (put-in ret [:args arg :kind] :key)))
     (meta :vararg)
     (do
-      (put-in ret :kind :var)
-      (each arg (slice (ret :arg-arr) 0 -2)
+      (put ret :kind :var)
+      (each arg (slice (ret :order) 0 -2)
         (put-in ret [:args arg :kind] :static))
-      (put-in ret [:args (last (ret :arg-arr)) :kind] :sink))
+      (put-in ret [:args (last (ret :order)) :kind] :sink))
     (not= (meta :min-arity) (meta :max-arity))
     (do
-      (put-in ret :kind :opt)
+      (put ret :kind :opt)
       (def index (meta :min-arity))
-      (each arg (slice (ret :arg-arr) 0 index)
+      (each arg (slice (ret :order) 0 index)
         (put-in ret [:args arg :kind] :static))
-      (each arg (slice (ret :arg-arr) index -1)
+      (each arg (slice (ret :order) index -1)
         (put-in ret [:args arg :kind] :opt)))
     (do
-      (put-in ret :kind :static)
-      (each arg (ret :arg-arr)
+      (put ret :kind :static)
+      (each arg (ret :order)
         (put-in ret [:arg arg :kind] :static))))
   ret)
 
