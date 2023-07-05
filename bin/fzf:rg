@@ -1,5 +1,4 @@
-#!/bin/sh
-
+#!/bin/bash
 preview='bat --color=always --style=header,numbers -H {2} {1} | grep -C3 {q}'
 export preview
 

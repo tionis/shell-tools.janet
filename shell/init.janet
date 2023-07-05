@@ -1,5 +1,4 @@
 (import ./util :prefix "" :export true)
-(import ./commands :export true)
 (import ./which :prefix "" :export true)
 (import ./screens :export true)
 (import ./dot-env :export true)
@@ -34,5 +33,3 @@
   "pretty print to stderr with colors is os/isatty truthy"
   [x]
   (eprintf (if (os/isatty) "%M" "%j") x))
-
-(alias 'commands 'commands/commands)
