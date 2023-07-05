@@ -4,9 +4,8 @@
 (import ../init :as shell)
 (setdyn :description "shell tools")
 
-(defn entr/this
+(defc entr/this
   "simply watch working dir and execute args on change"
-  :cli
   [& args]
   (entr/inotify
     ["."]
@@ -14,9 +13,21 @@
         (def code (os/execute args :p))
         (shell/pp [:exit-code code]))))
 
-(defn entr/dirs
-  "splits input"
-  :cli
+(defc entr
+  "simple entr replacement"
+  {:options {"dir" {:kind :accumulate
+                    :help "dir to watch"}
+             :default {:kind :accumulate}}
+   :cli/map |(($0 :func) ($0 "dir") ($0 :default))}
+  [dirs args]
+  (entr/inotify
+    ["."]
+    (fn []
+        (def code (os/execute args :p))
+        (shell/pp [:exit-code code]))))
+
+(defc entr/dirs
+  "watch dirs and execute args on change"
   {:cli/map cli/split-at-double-dash
    :cli/doc "take all args until -- as dirs to watch, use rest as args for command to execute on change"}
   [dirs args]

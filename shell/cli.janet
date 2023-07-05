@@ -1,18 +1,39 @@
 (import spork/argparse)
+(def cli/funcs @{})
 
-(def- colors
-  {:black   "\e[0;30m"
-   :red     "\e[0;31m"
-   :green   "\e[0;32m"
-   :yellow  "\e[0;33m"
-   :blue    "\e[0;34m"
-   :magenta "\e[0;35m"
-   :cyan    "\e[0;36m"
-   :white   "\e[0;37m"})
+(defmacro defc
+  "same signature as defn but add the :cli metadata and adds func to global cli/funcs"
+  [name & more]
+  ~(upscope
+     (defn ,name :cli ,;more) # TODO broken
+     (put ,cli/funcs (keyword ,name) (dyn ,name))))
 
-(defn- color [col text]
+(def colors
+  {:black  30
+   :red    31
+   :green  32
+   :yellow 33
+   :blue   34
+   :purple 35
+   :cyan   36
+   :white  37})
+
+(defn- color [col text &opt modifier]
+  (default modifier :regular)
+  (def reset "\e[0m")
   (unless (os/isatty) (break text))
-  (string (get colors col (colors :white)) text (colors :white)))
+  (def code (get colors col (colors :white)))
+  (def prefix
+    (case modifier
+      :regular (string "\e[0;" code "m")
+      :bold (string "\e[1;" code "m")
+      :underline (string "\e[4;" code "m")
+      :background (string "\e[" (+ code 10) "m")
+      :high-intensity (string "\e[0;" (+ code 60) "m")
+      :high-intensity-bold (string "\e[1;" (+ code 60) "m")
+      :high-intensity-background (string "\e[1;" (+ code 70) "m")
+      reset))
+  (string prefix text reset))
 
 (defn- pad-right
   "Pad a string on the right with some spaces."
@@ -57,6 +78,7 @@
   (unless (empty? opdoc)
     (buffer/push out (string/repeat " " indentation) "Optional:\n")
     (buffer/push out opdoc))
+  (buffer/popn out 1)
   out)
 
 (defn- get-cli-funcs
@@ -73,30 +95,59 @@
   (def lines (string/split "\n" docstring))
   (def out @[])
   (array/push out
-              (string/join (map |(string/format "%j" $0)
-                                (slice (parse (first lines)) start -1))
-                           " "))
+    (string/join
+      (map |(string/format "%j" $0)
+           (slice (parse (first lines)) start -1))
+      " "))
   (def rest @[])
   (when (> (length lines) 2)
     (each line (slice lines 2 -1)
-      (array/push out (string "  " line))))
+      (array/push out line)))
   (if (> (length alias) 0)
     (array/push out (string "aliases: [" (string/join alias ", ") "]")))
   (string/join out "\n"))
 
-(defn print-help [x & args]
-  (print (get-in x [:help :description]))
-  (eachk name x
-    (when-let [help-str (get-in x [name :help])
-               help (string/split "\n" help-str)
-               prefix-no-color (string "  " name " - ")
-               prefix (string "  " (color :cyan name) " - ")
-               indent (string/repeat " " (length prefix-no-color))]
-      (print prefix (first help))
-      (each line (slice help 1 -1)
-        (print indent line)))))
+(defn- get-func-help
+  [name command &opt indent]
+  (default indent 2)
+  (def buf @"")
+  (when-let [help-str (command :help)
+             help (string/split "\n" help-str)]
+    (buffer/push buf (string/repeat " " indent) (color :cyan name) " " (first help) "\n")
+    (each line (slice help 1 -1)
+      (buffer/push buf (string/repeat " " (+ indent 2)) line "\n")))
+  buf)
+
+(defn print-help [x &opt patt]
+  # TODO add --all to list all commands regardless of structure
+  (if patt
+    (cond
+      (x patt) (prin (get-func-help patt (x patt) 0))
+      (= (last patt) (chr "/"))
+      (let [commands (sort (filter |(string/has-prefix? patt $0) (keys x)))]
+        (print (color :green patt))
+        (each name commands # TODO only show on level deeper after prefix so test/ shows test/one and test/two but not test/hello/there/how or test/are/you use the same approach as below to mark them as expandable
+          (prin (get-func-help name (x name)))))
+      (error "command not found"))
+    (do
+      (print (get-in x [:help :description]))
+      (def commands
+        (->> (keys x)
+             (map |(if-let [index (string/find "/" $0)]
+                     {:kind :dir
+                      :name (slice $0 0 (inc index))}
+                     {:kind :command
+                      :name $0}))
+             (distinct)
+             (sort-by |($0 :name))))
+      (each c commands
+        (case (c :kind)
+          :dir (print "  " (color :green (c :name)) " show subcommands with 'help " (c :name)"'")
+          :command
+          (prin (get-func-help (c :name) (x (c :name)))))))))
 
 (defn split-at-double-dash
+  "to be used in :cli/func, splits the inputs args at '--' and calls func with both arg arrays"
   [{:func func :argparse argparse :args args}]
   (def index (index-of "--" args))
   (unless index (error "could not find -- in input args"))
@@ -139,7 +190,7 @@
     @{:help
       {:help `show this help`
        :description desc
-       :func print-help}
+       :func (fn [x &opt patt] (print-help x (if patt (keyword patt) nil)))}
       :default
       (alias :help)})
   (loop [[binding meta] :pairs funcs
@@ -156,7 +207,7 @@
                                                (truthy? options)))]]
     (def help (string docstr
                       (if options
-                        (argparse->cli-help options)
+                        (string "\n" (argparse->cli-help options))
                         "")))
     (def func
       (if cli-func
@@ -178,7 +229,7 @@
               raw_args))
           (raw-func ;args))))
     (put commands name {:help help :func func :alias aliases})
-    (each alias aliases (put commands alias (alias name))))
+    (each al aliases (put commands al (alias name))))
 
   (def subcommand (keyword (get args 1 nil)))
   (def subcommand/args (if (> (length args) 2) (slice args 2 -1) []))
@@ -189,7 +240,10 @@
   `main func to be used with (use shell/commands)
   script description is set from (dyn :description)`
   [& args]
-  (def funcs (get-cli-funcs))
+  (def funcs
+    (if (= (length cli/funcs) 0)
+      (get-cli-funcs)
+      cli/funcs))
   (commands :desc (dyn :description)
             :args args
             :funcs funcs))

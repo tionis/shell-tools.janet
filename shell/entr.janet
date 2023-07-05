@@ -28,6 +28,6 @@
     (when (empty? buf)
       (:wait proc)
       (break))
-    (print "buffer: " buf)
+    (printf "change: %M" (map |(string/split " " $0) (string/split "\n" (string/trimr buf))))
     (func)
     (print "Rebuild " (++ build-iter))))
