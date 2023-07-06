@@ -2,7 +2,7 @@
 (use ../cli)
 (import ../entr)
 (import ../init :as shell)
-(setdyn :description "shell tools")
+(description "shell tools")
 
 (defc entr/this
   "simply watch working dir and execute args on change"

@@ -1,12 +1,13 @@
 (import spork/argparse)
 (def cli/funcs @{})
+(var cli/description "")
 
 (defmacro defc
   "same signature as defn but add the :cli metadata and adds func to global cli/funcs"
   [name & more]
   ~(upscope
-     (defn ,name :cli ,;more) # TODO broken
-     (put ,cli/funcs (keyword ,name) (dyn ,name))))
+     (defn ,name :cli ,;more)
+     (put cli/funcs (keyword (quote ,name)) (dyn (quote ,name)))))
 
 (def colors
   {:black  30
@@ -236,6 +237,11 @@
   (def command (get commands subcommand (commands :default)))
   ((command :func) commands ;subcommand/args))
 
+(defn description
+  [desc]
+  (setdyn :description desc)
+  (set cli/description desc))
+
 (defn main
   `main func to be used with (use shell/commands)
   script description is set from (dyn :description)`
@@ -244,6 +250,6 @@
     (if (= (length cli/funcs) 0)
       (get-cli-funcs)
       cli/funcs))
-  (commands :desc (dyn :description)
+  (commands :desc (or cli/description (dyn :description))
             :args args
             :funcs funcs))
