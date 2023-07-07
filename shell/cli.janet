@@ -93,7 +93,7 @@
 
 (defn- docstring->cli-help [docstring alias has-argparse]
   (def start (if has-argparse 2 1)) # TODO replace with proper PEG grammar
-  (def lines (string/split "\n" docstring))
+  (def lines (string/split "\n" docstring)) # TODO handle empty docstring better (currently has empty line)
   (def out @[])
   (array/push out
     (string/join
