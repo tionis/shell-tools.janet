@@ -1,6 +1,7 @@
 (import spork/argparse)
+(import spork/path)
 (def cli/funcs @{})
-(var cli/description "")
+(var cli/description nil)
 
 (defmacro defc
   "same signature as defn but add the :cli metadata and adds func to global cli/funcs"
@@ -124,6 +125,11 @@
   (if patt
     (cond
       (x patt) (prin (get-func-help patt (x patt) 0))
+      (= patt :all)
+      (do
+        (print (get-in x [:help :description]))
+        (each c (sort (keys x))
+            (prin (get-func-help c (x c)))))
       (= (last patt) (chr "/"))
       (let [commands (sort (filter |(string/has-prefix? patt $0) (keys x)))]
         (print (color :green patt))
@@ -134,7 +140,7 @@
       (print (get-in x [:help :description]))
       (def commands
         (->> (keys x)
-             (map |(if-let [index (string/find "/" $0)]
+             (map |(if-let [index (string/find "/" $0)] # TODO limit to first level
                      {:kind :dir
                       :name (slice $0 0 (inc index))}
                      {:kind :command
@@ -178,10 +184,16 @@
    :options - if defined it is used as a input map for spork/argparse to parse input args
               the result of this parsing is added as first argument when invoking the function
    TODO: will add some automatic or definable argument type conversion and handling of named arguments etc. 
-  Spcifying a description via the :desc named argument is recommended`
+  Spcifying a description via the :desc named argument or the description macro is recommended`
   [&named args desc funcs env]
-  (default desc "this tool has no description at the moment")
   (default args (dyn *args*))
+  (default desc (or cli/description
+                   (dyn :description)
+                   (path/basename (first args))))
+  (default funcs
+    (if (= (length cli/funcs) 0)
+      (get-cli-funcs)
+      cli/funcs))
   (default funcs (get-cli-funcs env))
   (defn alias [target]
     {:alias target
@@ -235,7 +247,9 @@
   (def subcommand (keyword (get args 1 nil)))
   (def subcommand/args (if (> (length args) 2) (slice args 2 -1) []))
   (def command (get commands subcommand (commands :default)))
-  ((command :func) commands ;subcommand/args))
+  (if (= (last subcommand) (chr "/"))
+    ((get-in commands [:help :func]) commands subcommand)
+    ((command :func) commands ;subcommand/args)))
 
 (defn description
   [desc]
@@ -243,13 +257,6 @@
   (set cli/description desc))
 
 (defn main
-  `main func to be used with (use shell/commands)
-  script description is set from (dyn :description)`
+  `main func to be used with (use shell/cli)`
   [& args]
-  (def funcs
-    (if (= (length cli/funcs) 0)
-      (get-cli-funcs)
-      cli/funcs))
-  (commands :desc (or cli/description (dyn :description))
-            :args args
-            :funcs funcs))
+  (commands :args args))
