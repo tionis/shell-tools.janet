@@ -5,6 +5,7 @@
 (import ./ts :export true)
 (import ./os :export true)
 (import ./path :export true)
+(import ./color :export true)
 
 (defn pp
   "pretty print with colors is os/isatty truthy"

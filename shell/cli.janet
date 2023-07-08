@@ -1,5 +1,6 @@
 (import spork/argparse)
 (import spork/path)
+(use ./color)
 (def cli/funcs @{})
 (var cli/description nil)
 
@@ -12,33 +13,6 @@
              cli-func (meta :cli/func)]
       (put meta :cli/func ((compile cli-func))))
     (put cli/funcs (keyword (quote ,name)) (dyn (quote ,name)))))
-
-(def colors
-  {:black  30
-   :red    31
-   :green  32
-   :yellow 33
-   :blue   34
-   :purple 35
-   :cyan   36
-   :white  37})
-
-(defn- color [col text &opt modifier]
-  (default modifier :regular)
-  (def reset "\e[0m")
-  (unless (os/isatty) (break text))
-  (def code (get colors col (colors :white)))
-  (def prefix
-    (case modifier
-      :regular (string "\e[0;" code "m")
-      :bold (string "\e[1;" code "m")
-      :underline (string "\e[4;" code "m")
-      :background (string "\e[" (+ code 10) "m")
-      :high-intensity (string "\e[0;" (+ code 60) "m")
-      :high-intensity-bold (string "\e[1;" (+ code 60) "m")
-      :high-intensity-background (string "\e[1;" (+ code 70) "m")
-      reset))
-  (string prefix text reset))
 
 (defn- pad-right
   "Pad a string on the right with some spaces."
@@ -250,23 +224,27 @@
                         (string "\n" (argparse->cli-help options))
                         "")))
     (def func
-      (if cli-func # TODO prevent tree shaking of cli function here?
+      (if cli-func # TODO improve this mess
         (fn [_ & raw_args]
           (def [args argparse]
             (if options
-              (let [parsed (argparse/argparse help :args (array "" ;raw_args) ;(mapcat identity (pairs options)))]
+              (let [parsed (argparse/argparse help :args (array "" ;raw_args)
+                                              ;(mapcat identity (pairs options)))]
                 (unless parsed (break 0))
                 [[;(get parsed :default []) ;(get parsed :rest [])]
                  parsed])
               [raw_args nil]))
+          # TODO if cli/return or something like that is set printf "%M" or printf "%j" the result
           (cli-func {:func raw-func :args args :argparse argparse}))
         (fn [_ & raw_args]
           (def args
             (if options
-              (let [parsed (argparse/argparse help :args (array "" ;raw_args) ;(mapcat identity (pairs options)))]
+              (let [parsed (argparse/argparse help :args (array "" ;raw_args)
+                                              ;(mapcat identity (pairs options)))]
                 (unless parsed (break 0))
                 [parsed ;(get parsed :default []) ;(get parsed :rest [])])
               raw_args))
+          # TODO if cli/return or something like that is set printf "%M" or printf "%j" the result
           (raw-func ;args))))
     (put commands name {:help help :func func :alias aliases})
     (each al aliases (put commands al (alias name))))
