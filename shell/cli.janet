@@ -4,6 +4,15 @@
 (def cli/funcs @{})
 (var cli/description nil)
 
+(defn log [x & rest]
+  (def to-print
+    (if (> (length rest) 0)
+      (array x ;rest)
+      x))
+  (if (os/isatty)
+    (printf "%M" to-print)
+    (printf "%j" to-print)))
+
 (defmacro defc
   "same signature as defn but add the :cli metadata and adds func to global cli/funcs"
   [name & more]
@@ -172,6 +181,7 @@
    :name - to override the name of the subcommand
    :alias - a list of aliases for the subcommand
    :cli/doc - override docstring for cli help
+   :cli/print - print output of function in jdn
    :cli/func - a function that is called instead of the real func
                is passed a single struct as input with:
                 :args for the input-args
@@ -215,6 +225,7 @@
                cli-func (get meta :cli/func)
                raw-func (get meta :value)
                aliases (get meta :alias [])
+               auto-print (get meta :cli/print)
                docstr (or (get meta :cli/doc)
                           (docstring->cli-help (get meta :doc)
                                                aliases
@@ -224,7 +235,7 @@
                         (string "\n" (argparse->cli-help options))
                         "")))
     (def func
-      (if cli-func # TODO improve this mess
+      (if cli-func # TODO improve this mess by building function AST iterativly
         (fn [_ & raw_args]
           (def [args argparse]
             (if options
@@ -234,8 +245,9 @@
                 [[;(get parsed :default []) ;(get parsed :rest [])]
                  parsed])
               [raw_args nil]))
-          # TODO if cli/return or something like that is set printf "%M" or printf "%j" the result
-          (cli-func {:func raw-func :args args :argparse argparse}))
+          (if auto-print
+            (log (cli-func {:func raw-func :args args :argparse argparse}))
+            (cli-func {:func raw-func :args args :argparse argparse})))
         (fn [_ & raw_args]
           (def args
             (if options
@@ -244,8 +256,9 @@
                 (unless parsed (break 0))
                 [parsed ;(get parsed :default []) ;(get parsed :rest [])])
               raw_args))
-          # TODO if cli/return or something like that is set printf "%M" or printf "%j" the result
-          (raw-func ;args))))
+          (if auto-print
+            (log (raw-func ;args))
+            (raw-func ;args)))))
     (put commands name {:help help :func func :alias aliases})
     (each al aliases (put commands al (alias name))))
 
