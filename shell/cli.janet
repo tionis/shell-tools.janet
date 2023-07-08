@@ -166,6 +166,24 @@
     (func argparse (slice args 0 index) (slice args (inc index) -1))
     (func (slice args 0 index) (slice args (inc index) -1))))
 
+(defn- map-keys
+   ```
+  Returns new table with function `f` applied to `data`'s
+  keys without recursing.
+  ```
+  [f data]
+  (tabseq [[k v] :pairs data]
+    (f k) v))
+
+(defn argparse-keyed
+  "to be used in :cli/func, calls func with positional args and splices the rest of the args"
+  [x]
+  (def keyed-args (map-keys keyword (x :argparse)))
+  (def pos-args (keyed-args :default))
+  (put keyed-args :default nil)
+  (put keyed-args :order nil)
+  ((x :func) ;pos-args ;(mapcat identity (pairs keyed-args))))
+
 # TODO missing features:
 # handle functions with named arguments by auto-generating argparse
 # allow adding type information to functions via argument metadata
@@ -231,7 +249,7 @@
         (fn [_ & raw_args]
           (def [args argparse]
             (if options
-              (let [parsed (argparse/argparse help :args raw_args ;(mapcat identity (pairs options)))]
+              (let [parsed (argparse/argparse help :args (array "" ;raw_args) ;(mapcat identity (pairs options)))]
                 (unless parsed (break 0))
                 [[;(get parsed :default []) ;(get parsed :rest [])]
                  parsed])
@@ -240,7 +258,7 @@
         (fn [_ & raw_args]
           (def args
             (if options
-              (let [parsed (argparse/argparse help :args raw_args ;(mapcat identity (pairs options)))]
+              (let [parsed (argparse/argparse help :args (array "" ;raw_args) ;(mapcat identity (pairs options)))]
                 (unless parsed (break 0))
                 [parsed ;(get parsed :default []) ;(get parsed :rest [])])
               raw_args))
