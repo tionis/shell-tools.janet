@@ -7,8 +7,11 @@
   "same signature as defn but add the :cli metadata and adds func to global cli/funcs"
   [name & more]
   ~(upscope
-     (defn ,name :cli ,;more)
-     (put cli/funcs (keyword (quote ,name)) (dyn (quote ,name)))))
+    (defn ,name :cli ,;more)
+    (if-let [meta (dyn (quote ,name))
+             cli-func (meta :cli/func)]
+      (put meta :cli/func ((compile cli-func))))
+    (put cli/funcs (keyword (quote ,name)) (dyn (quote ,name)))))
 
 (def colors
   {:black  30
@@ -122,10 +125,11 @@
 
 (defn print-help [x &opt patt]
   # TODO add --all to list all commands regardless of structure
+  # TODO refactor this monstrosity
   (if patt
     (cond
       (x patt) (prin (get-func-help patt (x patt) 0))
-      (= patt :all)
+      (index-of patt [:all :--all])
       (do
         (print (get-in x [:help :description]))
         (each c (sort (keys x))
@@ -223,7 +227,7 @@
                         (string "\n" (argparse->cli-help options))
                         "")))
     (def func
-      (if cli-func
+      (if cli-func # TODO prevent tree shaking of cli function here?
         (fn [_ & raw_args]
           (def [args argparse]
             (if options
@@ -232,7 +236,7 @@
                 [[;(get parsed :default []) ;(get parsed :rest [])]
                  parsed])
               [raw_args nil]))
-            (cli-func {:func raw-func :args args :argparse argparse}))
+          (cli-func {:func raw-func :args args :argparse argparse}))
         (fn [_ & raw_args]
           (def args
             (if options

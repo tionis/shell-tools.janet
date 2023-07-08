@@ -18,7 +18,7 @@
   {:options {"dir" {:kind :accumulate
                     :help "dir to watch"}
              :default {:kind :accumulate}}
-   :cli/map |(($0 :func) ($0 "dir") ($0 :default))}
+   :cli/func |(($0 :func) ($0 "dir") ($0 :default))}
   [dirs args]
   (entr/inotify
     ["."]
@@ -28,7 +28,7 @@
 
 (defc entr/dirs
   "watch dirs and execute args on change"
-  {:cli/map cli/split-at-double-dash
+  {:cli/func split-at-double-dash
    :cli/doc "take all args until -- as dirs to watch, use rest as args for command to execute on change"}
   [dirs args]
   (entr/inotify
