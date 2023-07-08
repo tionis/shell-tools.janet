@@ -153,7 +153,7 @@
              (sort-by |($0 :name))))
       (each c commands
         (case (c :kind)
-          :dir (print "  " (color :green (c :name)) " show subcommands with 'help " (c :name)"'")
+          :dir (print "  " (color :green (c :name)) " show subcommands with 'help " (c :name)"'") # TODO integrate dir/category help here (should also add new macro to define categories (or extend defc))
           :command
           (prin (get-func-help (c :name) (x (c :name)))))))))
 
@@ -228,6 +228,11 @@
        :func (fn [x &opt patt] (print-help x (if patt (keyword patt) nil)))}
       :default
       (alias :help)})
+  # TODO: if category/command exists but category does not then following subcommands should show the help message for ctegory/:
+  #  - category/
+  #  - category
+  #  - help category/
+  #  - help category
   (loop [[binding meta] :pairs funcs
          #:when (symbol? binding)
          :when (function? (get meta :value))
