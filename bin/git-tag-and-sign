@@ -1,0 +1,5 @@
+#!/bin/sh
+#
+# Create a tag and sign it.
+
+git tag -s -m "$1" "$1" "$2"

@@ -1,0 +1,3 @@
+#!/bin/sh
+module_rel_path="$(realpath --relative-to="$(git rev-parse --show-toplevel)/" "$1")"
+git submodule deinit "$module_rel_path" && rm -rf "$(git rev-parse --git-dir)/modules/$module_rel_path"

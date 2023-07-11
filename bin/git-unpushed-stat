@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# Show the diffstat of everything you haven't pushed yet.
+# shellcheck disable=SC2086
+branch=$(git rev-parse --abbrev-ref HEAD)
+count=$(git rev-list --count HEAD origin/$branch...HEAD)
+
+if [ "$count" -eq "1" ]
+then
+  s=''
+else
+  s='s'
+fi
+
+git diff --stat origin/$branch..HEAD
+retval=$?
+echo " $count commit$s total"
+exit "$retval"

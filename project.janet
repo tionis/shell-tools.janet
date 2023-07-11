@@ -3,6 +3,7 @@
   :description "some tools to make working in a shell easier"
   :dependencies ["https://github.com/janet-lang/spork"
                  "https://tasadar.net/tionis/jeff"
+                 "https://tasadar.net/tionis/janet-tools"
                  #"https://github.com/pyrmont/watchful" # TODO allow watching singular files
                  ]
   :author "tionis.dev"
@@ -27,7 +28,7 @@
     :is-janet true))
 
 (each f (if (os/stat "man") (os/dir "man") [])
-  (declare-manpage # Install man pages
+  (declare-manpage # Install man pages # TODO auto generate from module if not existant?
     (string "man/" f)))
 
 (declare-source # Declare source files to be imported by other janet based scripts
