@@ -164,6 +164,7 @@
   [x]
   (def keyed-args (map-keys keyword (x :argparse)))
   (def pos-args (keyed-args :default))
+  (default pos-args [])
   (put keyed-args :default nil)
   (put keyed-args :order nil)
   ((x :func) ;pos-args ;(mapcat identity (pairs keyed-args))))
