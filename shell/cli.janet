@@ -262,7 +262,7 @@
             (log (raw-func ;args))
             (raw-func ;args)))))
     (put commands name {:help help :func func :alias aliases})
-    (each al aliases (put commands al (alias name))))
+    (each al aliases (put commands (keyword al) (alias name))))
 
   (def subcommand (keyword (get args 1 nil)))
   (def subcommand/args (if (> (length args) 2) (slice args 2 -1) []))
