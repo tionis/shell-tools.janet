@@ -1,8 +1,7 @@
 (import spork/getline)
 (import spork/sh)
-(import ./shlex)
-(use ./exec)
-(use ./git)
+(use ../exec)
+(use ./init)
 
 (defn repl []
   (exec "git" "version")
@@ -22,6 +21,6 @@
       "exit" (os/exit 0)
       ":q" (os/exit 0)
       (cond
-        (peg/match ~(* "!" (any 1) -1) resp) (os/execute [;(shlex/split (slice resp 1 -1))] :p)
-        (peg/match ~(* "git" (any 1) -1) resp) (os/execute [;(shlex/split resp)] :p)
-        (os/execute ["git" ;(shlex/split resp)] :p)))))
+        (peg/match ~(* "!" (any 1) -1) resp) (os/execute [;(sh/split (slice resp 1 -1))] :p)
+        (peg/match ~(* "git" (any 1) -1) resp) (os/execute [;(sh/split resp)] :p)
+        (os/execute ["git" ;(sh/split resp)] :p)))))
