@@ -5,6 +5,10 @@
 (use ./cli)
 (description "collection of shell utils")
 
+(defn roll-one-y-sided-die [y]
+  (if (not (dyn :rng)) (setdyn :rng (math/rng (os/cryptorand 8))))
+  (+ 1 (math/rng-int (dyn :rng) y)))
+
 (defc more/chronic
   "runs a command quietly unless it fails"
   [& args]
@@ -26,7 +30,7 @@
   #   (sh/exec "ctpv" "-c" id)
   #   (sh/exec "ctpv" file w h x y id)
   #   (os/exit 0))
-  (def id (string (randgen/rand-int 0 1000000001)))
+  (def id (string (roll-one-y-sided-die 1000000000)))
   (def pv @[])
   (var [h w] (rawterm/size))
   (var [x y] [0 0])
