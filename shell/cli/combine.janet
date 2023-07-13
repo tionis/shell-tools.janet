@@ -35,7 +35,6 @@
     (if (not (lines_1_map line))
         (print line))))
 
-
 (defn print_help []
   (print "Check man page for help"))
 

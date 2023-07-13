@@ -1,12 +1,21 @@
 #!/bin/env janet
 (import spork/rawterm)
+(import spork/randgen)
 (import spork/sh)
+(use ./cli)
+(description "collection of shell utils")
 
-(defn roll-one-y-sided-die [y]
-  (if (not (dyn :rng)) (setdyn :rng (math/rng (os/cryptorand 8))))
-  (+ 1 (math/rng-int (dyn :rng) y)))
+(defc more/chronic
+  "runs a command quietly unless it fails"
+  [& args]
+  (def env (os/environ))
+  (def streams (os/pipe))
+  (put env :out (streams 1))
+  (def exit_code (os/execute args :pe env))
+  (ev/close (streams 1))
+  (if (not (= exit_code 0)) (prin (ev/read (streams 0) :all))))
 
-(defn main [_ & args]
+(defc fzf/preview [& args]
   # (when (= (first args) "preview")
   #   (var file (get args 1 ""))
   #   (def w (get args 2 ""))
@@ -17,7 +26,7 @@
   #   (sh/exec "ctpv" "-c" id)
   #   (sh/exec "ctpv" file w h x y id)
   #   (os/exit 0))
-  (def id (string (roll-one-y-sided-die 1000000000)))
+  (def id (string (randgen/rand-int 0 1000000001)))
   (def pv @[])
   (var [h w] (rawterm/size))
   (var [x y] [0 0])
