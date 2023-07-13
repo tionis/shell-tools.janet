@@ -180,8 +180,8 @@
   If no funcs are given as input alls funcs of the current environment that have the :cli metadata set to true are used.
   by using the functions name as command name and docstring as help message.
   Following function metadata keys can also be added:
-   :name - to override the name of the subcommand
-   :alias - a list of aliases for the subcommand
+   :cli/name - to override the name of the subcommand
+   :cli/alias - a list of aliases for the subcommand
    :cli/doc - override docstring for cli help
    :cli/print - print output of function in jdn
    :cli/func - a function that is called instead of the real func
@@ -189,7 +189,7 @@
                 :args for the input-args
                 :argparse - the output of argparse if :options was used
                 :func - the original function
-   :options - if defined it is used as a input map for spork/argparse to parse input args
+   :argparse - if defined it is used as a input map for spork/argparse to parse input args
               the result of this parsing is added as first argument when invoking the function
    TODO: will add some automatic or definable argument type conversion and handling of named arguments etc. 
   Spcifying a description via the :desc named argument or the description macro is recommended`
@@ -222,11 +222,11 @@
   (loop [[binding meta] :pairs funcs
          #:when (symbol? binding)
          :when (function? (get meta :value))
-         :let [name (or (get meta :name) (keyword binding))
-               options (get meta :options)
+         :let [name (or (get meta :cli/name) (get meta :name) (keyword binding))
+               options (or (get meta :cli/argparse) (get meta :argparse) (get meta :options))
                cli-func (get meta :cli/func)
                raw-func (get meta :value)
-               aliases (get meta :alias [])
+               aliases (or (get meta :cli/alias) (get meta :alias []))
                auto-print (get meta :cli/print)
                docstr (or (get meta :cli/doc)
                           (docstring->cli-help (get meta :doc)
@@ -264,12 +264,14 @@
     (put commands name {:help help :func func :alias aliases})
     (each al aliases (put commands (keyword al) (alias name))))
 
-  (def subcommand (keyword (get args 1 nil)))
-  (def subcommand/args (if (> (length args) 2) (slice args 2 -1) []))
-  (def command (get commands subcommand (commands :default)))
-  (if (= (last subcommand) (chr "/"))
-    ((get-in commands [:help :func]) commands subcommand)
-    ((command :func) commands ;subcommand/args)))
+  (def name (keyword (path/basename (get args 0 ""))))
+  (if (commands name)
+    ((get-in commands [name :func]) commands ;(slice args 1 -1))
+    (let [subcommand (keyword (get args 1 nil))
+          command (get commands subcommand (commands :default))]
+      (if (= (last subcommand) (chr "/"))
+        ((get-in commands [:help :func]) commands subcommand)
+        ((command :func) commands ;(if (> (length args) 2) (slice args 2 -1) []))))))
 
 (defn description
   [desc]

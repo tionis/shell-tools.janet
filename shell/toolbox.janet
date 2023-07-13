@@ -19,7 +19,9 @@
   (ev/close (streams 1))
   (if (not (= exit_code 0)) (prin (ev/read (streams 0) :all))))
 
-(defc fzf/preview [& args]
+(defc fzf/preview
+  {:cli/alias ["fzf:preview"]}
+  [& args]
   # (when (= (first args) "preview")
   #   (var file (get args 1 ""))
   #   (def w (get args 2 ""))
