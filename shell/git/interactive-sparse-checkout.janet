@@ -1,7 +1,7 @@
 #!/bin/env janet
 (import spork/path)
 (import spork/sh)
-(import jeff)
+(import toolbox/jeff)
 (use ../exec)
 
 (defn filter-and-split-paths-into-components [p]
