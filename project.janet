@@ -3,7 +3,7 @@
   :description "some tools to make working in a shell easier"
   :dependencies ["https://github.com/janet-lang/spork"
                  "https://tasadar.net/tionis/jeff"
-                 "https://tasadar.net/tionis/janet-tools"
+                 "https://tasadar.net/tionis/toolbox"
                  #"https://github.com/pyrmont/watchful" # TODO allow watching singular files
                  ]
   :author "tionis.dev"
