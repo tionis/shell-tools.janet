@@ -1,0 +1,7 @@
+#!/bin/sh
+REGEX="^"
+for tag in "$@"; do
+  ESCAPED_TAG=$(echo "$tag" | sed 's/[^^]/[&]/g; s/\^/\\^/g')
+  REGEX="$REGEX(?=.*\\[([A-Za-z0-9_-]*,)*$ESCAPED_TAG(,[A-Za-z0-9_-]*)*\\]\\..*)"
+done
+grep -P "$REGEX"

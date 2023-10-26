@@ -1,0 +1,16 @@
+#!/bin/sh
+# tags are stored in filenames like so: filename[comma,seperated,tag,list].ending
+# list all files that match any of the listed tags (OR) use grep:tags to filter for AND
+FINDER="find"
+if command -v fd >/dev/null 2>&1; then
+  FINDER="fd"
+fi
+for tag in "$@"; do
+  ESCAPED_TAG=$(echo "$tag" | sed 's/[^^]/[&]/g; s/\^/\\^/g')
+  case $FINDER in
+    fd)
+      fd ".*\\[([A-Za-z0-9_-]*,)*$ESCAPED_TAG(,[A-Za-z0-9_-]*)*\\]\\..*";;
+    find)
+      find . -regextype posix-extended -regex ".*\\[([A-Za-z0-9_-]*,)*$ESCAPED_TAG(,[A-Za-z0-9_-]*)*\\]\\..*";;
+  esac
+done
