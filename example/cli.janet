@@ -1,5 +1,3 @@
-(use ../shell/commands)
+(use ../shell/cli)
 
-(defn
-  test
-  [])
+(defc test [])
